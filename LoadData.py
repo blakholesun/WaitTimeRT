@@ -1,7 +1,10 @@
 
 import pymysql
+import getpass
 
-def loadData(user,pwd):
+def loadData(sqlfilename):
+    user = input("Please enter uname: ")
+    pwd = getpass.getpass('Please enter pwd: ')
     connection = pymysql.connect(host='localhost',
                                 user=user,
                                 password=pwd,
@@ -10,29 +13,24 @@ def loadData(user,pwd):
                                 cursorclass=pymysql.cursors.DictCursor)
     try:
         with connection.cursor() as cursor:
-        # Read a single record
-            sqlscript = "SELECT a.AliasName, ap.PatientserNum, ap.ScheduledStartTime, ap.ScheduledEndTime, ap.Status \
-                FROM Appointment ap INNER JOIN Patient p ON ap.PatientSerNum = p.PatientSerNum \
-                INNER JOIN Alias a ON a.AliasSerNum = ap.AliasSerNum \
-                WHERE a.AliasName = 'Ct-Sim' \
-                ORDER BY PatientSerNum, ScheduledStartTime"
-            cursor.execute(sqlscript)
-            ctdata = cursor.fetchall()
-            sqlscript = "SELECT a.AliasName, t.PatientSerNum, t.CreationDate, t.CompletionDate, t.Status \
-                FROM Task t INNER JOIN Patient p ON p.PatientSerNum = t.PatientSerNum \
-                INNER JOIN Alias a ON a.AliasSerNum = t.AliasSerNum \
-                WHERE a.AliasName = 'READY FOR TREATMENT' \
-                ORDER BY PatientSerNum, CreationDate"
-            cursor.execute(sqlscript)
-            RFTData = cursor.fetchall()
+            # Open and read the file as a single buffer
+            fd = open(sqlfilename, 'r')
+            sqlFile = fd.read()
+            fd.close()
+
+            # all SQL commands (split on ';')
+            sqlFile = sqlFile.replace('\n', ' ')
+            sqlCommands = sqlFile.split(';')
+            print(sqlCommands[0])
+            dataList = []
+            # Execute every command from the input file
+            for command in sqlCommands:
+                cursor.execute(command)
+                dataList.append(cursor.fetchall())
     finally:
         connection.close()
-    return (ctdata, RFTData)
+    return dataList
 
 if __name__ == "__main__":
-    user = raw_input("Please enter uname: ")
-    pwd = raw_input("Please enter pwd: ")
-    CTDATA, RFTDATA = loadData(user,pwd)
-    print(CTDATA[0])
-    print(RFTDATA[0])
-    
+    sqlfilename = input("Type sql script filename: ")
+    data = loadData(sqlfilename)
