@@ -21,7 +21,6 @@ def loadData(sqlfilename):
             # all SQL commands (split on ';')
             sqlFile = sqlFile.replace('\n', ' ')
             sqlCommands = sqlFile.split(';')
-            print(sqlCommands[0])
             dataList = []
             # Execute every command from the input file
             for command in sqlCommands:
@@ -29,7 +28,10 @@ def loadData(sqlfilename):
                 dataList.append(cursor.fetchall())
     finally:
         connection.close()
-    return dataList
+    data_names = ['CT', 'RFT', 'Prio', 'DOBSex', 'Onc', 'Diag']
+    dataDict = dict(zip(data_names, dataList))
+
+    return dataDict
 
 if __name__ == "__main__":
     sqlfilename = input("Type sql script filename: ")
