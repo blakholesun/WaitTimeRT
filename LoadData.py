@@ -11,26 +11,27 @@ def loadData(sqlfilename):
                                 db='projectschema',
                                 charset='utf8mb4',
                                 cursorclass=pymysql.cursors.DictCursor)
-    try:
-        with connection.cursor() as cursor:
-            # Open and read the file as a single buffer
-            fd = open(sqlfilename, 'r')
-            sqlFile = fd.read()
-            fd.close()
+    data_names = ['CT', 'MD', 'DOSE', 'PRES', 'PHYS','RFT']
 
-            # all SQL commands (split on ';')
-            sqlFile = sqlFile.replace('\n', ' ')
-            sqlCommands = sqlFile.split(';')
-            dataList = []
-            # Execute every command from the input file
-            for command in sqlCommands:
-                cursor.execute(command)
-                dataList.append(cursor.fetchall())
-    finally:
-        connection.close()
-    data_names = ['CT', 'RFT', 'Prio', 'DOBSex', 'Onc', 'Diag']
+    cursor = connection.cursor()
+    # Open and read the file as a single buffer
+    fd = open(sqlfilename, 'r')
+    sqlFile = fd.read()
+    fd.close()
+
+    # all SQL commands (split on ';')
+    sqlFile = sqlFile.replace('\n', ' ')
+    sqlCommands = sqlFile.split(';')
+    dataList = []
+    # Execute every command from the input file
+    for index, command in enumerate(sqlCommands):
+        cursor.execute(command)
+        dataList.append(cursor.fetchall())
+
+    connection.close()
+
     dataDict = dict(zip(data_names, dataList))
-
+    print('SQL query completed. Data Loaded')
     return dataDict
 
 if __name__ == "__main__":
