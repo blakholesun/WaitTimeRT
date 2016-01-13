@@ -1,30 +1,53 @@
 import LoadData as ld
 import pandas as pd
+import numpy as np
 
-def getNumberDays(start, end):
+def getNumberDays(dfstart, dfend):
     # get the number of days not including the weekends
+    A = [d.date() for d in dfstart]
+    B = [d.date() for d in dfend]
+    return np.busday_count(A, B)
 
 def toDataFrame(sqlFilename):
     dataDict = ld.loadData(sqlFilename)
-    print("Data Loaded")
     
-    dfDict = []
+    dfDict = {}
 
+    #Make dataframes, drop all duplicates on patientsernum
+    #except last, reset index    
     for data_name, data in dataDict.items() :
         tempDat = pd.DataFrame(data)
-        tempDat.columns = map(str.lower, tempDat.coulmns)
-        if data_name == 'RFT' or data_name == 'CT'
-            tempDat.drop_duplicates(subset = 'patientsernum', 
+        tempDat.columns = map(str.lower, tempDat.columns)
+        tempDat.drop_duplicates(subset = 'patientsernum', 
                                     keep = 'last', inplace = True)
-            tempDat.reset_index(drop = True, inplace = True)
+        tempDat.reset_index(drop = True, inplace = True)
+        dfDict[data_name] = data
 
-        dfList = dfList.append(tempDat)
+    #Merge and create a dictionary of data frames that have wait times
+
+    for data_name, data in dfDict.items():
+        if data_name == 'RFT':
+            continue
+        dfDict[data_name] = pd.merge(dfDict[data_name], dfDict['RFT'],
+                            how = 'inner', on = 'patientsernum')
+        dfDict[data_name] = dfDict[data_name][dfDict[data_name].prioritycode_x 
+                            == dfDict[data_name].prioritycode_y]
 
 
-    #TODO   Remove weekends (Create new method)
-    #       Get all the features DIAG, ONC, PRIORITY, AGE, SEX
-    #       Add patient load in system when created
+    #for df in dflist:
+
+
+
+
+
+    #TODO   
+    #       Get all the features DIAG, ONC, PRIORITY, AGE, SEX (Binary vector)
+    #       Add number of patients in system when created
     #       Add oncologist load
     #       Try with new dataset
 
-    return (feature, output)
+    return dfDict
+
+if __name__ == "__main__":
+    sqlfilename = input("Type sql script filename: ")
+    dfList = toDataFrame(sqlfilename)
