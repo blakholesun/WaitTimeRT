@@ -5,6 +5,7 @@ import getpass
 def load_data(sqlfilename):
     user = input("Please enter uname: ")
     pwd = getpass.getpass('Please enter pwd: ')
+    print('Please Wait: Querying Database')
     connection = pymysql.connect(host='localhost',
                                  user=user,
                                  password=pwd,
@@ -27,6 +28,7 @@ def load_data(sqlfilename):
     for index, command in enumerate(sqlcommands):
         cursor.execute(command)
         dataList.append(cursor.fetchall())
+        print('Done ', data_names[index])
 
     connection.close()
 
