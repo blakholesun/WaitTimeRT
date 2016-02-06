@@ -56,8 +56,7 @@ def parse_data(dataDict):
             - pd.DatetimeIndex(dfDict['RFT']['dateofbirth']).year)
     else:
         dfDict['RFT']['dateofbirth'] = (pd.DatetimeIndex(dfDict['RFT']['enddate']).year
-            - dfDict['RFT']['dateofbirth'])
-        
+            - dfDict['RFT']['dateofbirth'])   
     dfDict['RFT'].rename(columns={'dateofbirth': 'age'},
         inplace=True)
     dfDict['RFT']['sex'] = dfDict['RFT']['sex'].str.strip()
@@ -69,21 +68,16 @@ def parse_data(dataDict):
         dfDict[data_name] = pd.merge(dfDict[data_name], 
             dfDict['RFT'], how='inner', on='patientsernum')
 
-        # for data_name_other, data_other in dfDict.items():
-        #     if data_name_other == data_name or data_name_other == 'RFT':
-        #         continue
-        #     else:
-        #         dfDict[data_name] = pd.merge(dfDict[data_name], 
-        #             dfDict[data_name_other],
-        #             how='inner',
-        #             on='patientsernum')
-
+        # Get business day count
         dfDict[data_name]['timediff'] = get_number_days(
             dfDict[data_name]['startdate'],
             dfDict[data_name]['enddate'])
+
+        # Remove negative days and anything greater than 30
         dfDict[data_name] = dfDict[data_name][dfDict[data_name].timediff > 0]
         dfDict[data_name] = dfDict[data_name][dfDict[data_name].timediff < 30]
 
+        # Ensure that priority codes match for CT and RFT
         if data_name == 'CT':
             dfDict[data_name] = dfDict[data_name][dfDict[data_name].prioritycode_x
                                                   == dfDict[data_name].prioritycode_y]
